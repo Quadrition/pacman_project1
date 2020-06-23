@@ -72,6 +72,29 @@ def tinyMazeSearch(problem):
     w = Directions.WEST
     return  [s, s, w, s, w, w, s, w]
 
+def generalSearch(problem, structure):
+    structure.push([(problem.getStartState(), 'Stop', 0)])
+    visited = []
+
+    while not structure.isEmpty():
+        path = structure.pop()
+
+        current_state = path[-1][0]
+
+        if problem.isGoalState(current_state):
+            return [state[1] for state in path][1:]
+
+        if current_state not in visited:
+            visited.append(current_state)
+
+            for successor in problem.getSuccessors(current_state):
+                if successor[0] not in visited:
+                    successor_path = path[:]
+                    successor_path.append(successor)
+                    structure.push(successor_path)
+
+    return False
+
 def depthFirstSearch(problem):
     """
     Search the deepest nodes in the search tree first.
@@ -86,18 +109,26 @@ def depthFirstSearch(problem):
     print("Is the start a goal?", problem.isGoalState(problem.getStartState()))
     print("Start's successors:", problem.getSuccessors(problem.getStartState()))
     """
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    from util import Stack
+
+    structure = Stack()
+    return generalSearch(problem, structure)
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    from util import Queue
+
+    structure = Queue()
+    return generalSearch(problem, structure)
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    cost = lambda path: problem.getCostOfActions([x[1] for x in path][1:])
+
+    from util import PriorityQueueWithFunction
+    structure = PriorityQueueWithFunction(cost)
+
+    return generalSearch(problem, structure)
 
 def nullHeuristic(state, problem=None):
     """
@@ -108,8 +139,12 @@ def nullHeuristic(state, problem=None):
 
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    fun = lambda path: problem.getCostOfActions([x[1] for x in path][1:]) + heuristic(path[-1][0], problem)
+
+    from util import PriorityQueueWithFunction
+    structure = PriorityQueueWithFunction(fun)
+
+    return generalSearch(problem, structure)
 
 
 # Abbreviations

@@ -14,6 +14,8 @@
 from game import Agent
 from searchProblems import PositionSearchProblem
 
+from game import Directions
+
 import util
 import time
 import search
@@ -23,7 +25,7 @@ IMPORTANT
 `agent` defines which agent you will use. By default, it is set to ClosestDotAgent,
 but when you're ready to test your own agent, replace it with MyAgent
 """
-def createAgents(num_pacmen, agent='ClosestDotAgent'):
+def createAgents(num_pacmen, agent='MyAgent'):
     return [eval(agent)(index=i) for i in range(num_pacmen)]
 
 class MyAgent(Agent):
@@ -31,14 +33,30 @@ class MyAgent(Agent):
     Implementation of your agent.
     """
 
+    # Number of pacmans in the game
+    pacman_count = 0
+    # A list of foods that are currently being chased by pacman
+    chasing_food = []
+
     def getAction(self, state):
         """
         Returns the next action the agent will take
         """
 
-        "*** YOUR CODE HERE ***"
-
-        raise NotImplementedError()
+        # Checks if pacman has no food left to eat
+        if not self.finished:
+            # Checks if pacman applied all actions from the list
+            if len(self.actions) == 0:
+                self.actions = search.bfs(FoodSearchProblem(state, self.index))
+                self.actions.reverse()
+            # Takes a next action from the list
+            if len(self.actions) > 0:
+                return self.actions.pop()
+            # Pacman has no food left to eat
+            else:
+                self.finished = True
+                return Directions.STOP
+        return Directions.STOP
 
     def initialize(self):
         """
@@ -47,9 +65,12 @@ class MyAgent(Agent):
         leave it blank
         """
 
-        "*** YOUR CODE HERE"
-
-        raise NotImplementedError()
+        # Indicates if pacman has no food left
+        self.finished = False
+        # A list of actions for the pacman
+        self.actions = []
+        # Increase number of pacmans
+        MyAgent.pacman_count += 1
 
 """
 Put any other SearchProblems or search methods below. You may also import classes/methods in
@@ -109,4 +130,47 @@ class AnyFoodSearchProblem(PositionSearchProblem):
         x,y = state
 
         return self.food[x][y]
+
+
+class FoodSearchProblem(PositionSearchProblem):
+    '''
+    Copyright notice: This class is original by Shaohua Yuan, Jing Xue has commented and improved
+    '''
+
+    def __init__(self, gameState, agentIndex):
+        "Stores information from the gameState.  You don't need to change this."
+        # Store the food for later reference
+        self.food = gameState.getFood()
+
+        # Store info for the PositionSearchProblem (no need to change this)
+        self.walls = gameState.getWalls()
+        self.startState = gameState.getPacmanPosition(agentIndex)
+        self.costFn = lambda x: 1
+        self._visited, self._visitedlist, self._expanded = {}, [], 0  # DO NOT CHANGE
+
+        self.agent_index = agentIndex
+        self.food_list = gameState.getFood().asList()
+        average_food = len(self.food_list) // MyAgent.pacman_count
+        self.agent_food = self.food_list[agentIndex * average_food : (agentIndex + 1) * average_food]
+
+    def isGoalState(self, state):
+        # Check if there is food
+        if state in self.food_list:
+            # Return true if there are less food than pacmans
+            if len(self.food_list) <= MyAgent.pacman_count:
+                return True
+            # Returns true if food is pacman's and it is not chased
+            if state in self.agent_food and state not in MyAgent.chasing_food:
+                MyAgent.chasing_food.append(state)
+                return True
+            # Returns true if state is close to pacman position and is not chased
+            elif (util.manhattanDistance(state, self.startState) <= (1 + self.agent_index) ** 2) \
+                    and (state not in MyAgent.chasing_food):
+                MyAgent.chasing_food.append(state)
+                return True
+            # Other situations
+            else:
+                return state in self.agent_food
+        else:
+            return False
 

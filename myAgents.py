@@ -70,8 +70,7 @@ class ClosestDotAgent(Agent):
         problem = AnyFoodSearchProblem(gameState, self.index)
 
 
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        return search.bfs(problem)
 
     def getAction(self, state):
         return self.findPathToClosestDot(state)[0]
@@ -109,6 +108,5 @@ class AnyFoodSearchProblem(PositionSearchProblem):
         """
         x,y = state
 
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        return self.food[x][y]
 

@@ -33,6 +33,52 @@ class MyAgent(Agent):
     Implementation of your agent.
     """
 
+    def getAction(self, state):
+        """
+        Returns the next action the agent will take
+        """
+
+        global start
+        global end
+        global food_count
+
+        if not start:
+            food_count = state.getNumFood()
+            start = True
+
+        if len(self.actions) == 0:
+            if end is False:
+                problem = AnyFoodSearchProblem(state, self.index)
+                self.actions = search.bfs(problem)
+                self.actions.reverse()
+                return self.actions.pop()
+            else:
+                return Directions.STOP
+        else:
+            return self.actions.pop()
+
+    def initialize(self):
+        """
+        Intialize anything you want to here. This function is called
+        when the agent is first created. If you don't need to use it, then
+        leave it blank
+        """
+
+        global start
+        start = False
+        global end
+        end = False
+
+        global target_food
+        target_food = []
+
+        self.actions = []
+
+class CoopAgent(Agent):
+    """
+    Implementation of your agent.
+    """
+
     # Number of pacmans in the game
     pacman_count = 0
     # A list of foods that are currently being chased by pacman
@@ -47,7 +93,7 @@ class MyAgent(Agent):
         if not self.finished:
             # Checks if pacman applied all actions from the list
             if len(self.actions) == 0:
-                self.actions = search.bfs(FoodSearchProblem(state, self.index))
+                self.actions = search.bfs(CoopFoodSearchProblem(state, self.index))
                 self.actions.reverse()
             # Takes a next action from the list
             if len(self.actions) > 0:
@@ -70,7 +116,7 @@ class MyAgent(Agent):
         # A list of actions for the pacman
         self.actions = []
         # Increase number of pacmans
-        MyAgent.pacman_count += 1
+        CoopAgent.pacman_count += 1
 
 """
 Put any other SearchProblems or search methods below. You may also import classes/methods in
@@ -127,12 +173,21 @@ class AnyFoodSearchProblem(PositionSearchProblem):
         The state is Pacman's position. Fill this in with a goal test that will
         complete the problem definition.
         """
-        x,y = state
+        x, y = state
 
-        return self.food[x][y]
+        global target_food
+        global end
+        global food_count
 
+        if state not in target_food and self.food[x][y]:
+            target_food.append(state)
+            if len(target_food) == food_count:
+                end = True
+            return True
+        else:
+            return False
 
-class FoodSearchProblem(PositionSearchProblem):
+class CoopFoodSearchProblem(PositionSearchProblem):
     '''
     Copyright notice: This class is original by Shaohua Yuan, Jing Xue has commented and improved
     '''
@@ -150,23 +205,23 @@ class FoodSearchProblem(PositionSearchProblem):
 
         self.agent_index = agentIndex
         self.food_list = gameState.getFood().asList()
-        average_food = len(self.food_list) // MyAgent.pacman_count
+        average_food = len(self.food_list) // CoopAgent.pacman_count
         self.agent_food = self.food_list[agentIndex * average_food : (agentIndex + 1) * average_food]
 
     def isGoalState(self, state):
         # Check if there is food
         if state in self.food_list:
             # Return true if there are less food than pacmans
-            if len(self.food_list) <= MyAgent.pacman_count:
+            if len(self.food_list) <= CoopAgent.pacman_count:
                 return True
             # Returns true if food is pacman's and it is not chased
-            if state in self.agent_food and state not in MyAgent.chasing_food:
-                MyAgent.chasing_food.append(state)
+            if state in self.agent_food and state not in CoopAgent.chasing_food:
+                CoopAgent.chasing_food.append(state)
                 return True
             # Returns true if state is close to pacman position and is not chased
             elif (util.manhattanDistance(state, self.startState) <= (1 + self.agent_index) ** 2) \
-                    and (state not in MyAgent.chasing_food):
-                MyAgent.chasing_food.append(state)
+                    and (state not in CoopAgent.chasing_food):
+                CoopAgent.chasing_food.append(state)
                 return True
             # Other situations
             else:

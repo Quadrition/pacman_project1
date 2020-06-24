@@ -40,20 +40,27 @@ class MyAgent(Agent):
 
         global start
         global end
+        # Counts the food at the begin
         global food_count
 
+        # Initialize a number of food
         if not start:
             food_count = state.getNumFood()
             start = True
 
+        # Checks if there are actions to apply
         if len(self.actions) == 0:
+            # Checks if there are more food to search
             if end is False:
+                # Initializes a new list of actions and takes the first one
                 problem = AnyFoodSearchProblem(state, self.index)
                 self.actions = search.bfs(problem)
                 self.actions.reverse()
                 return self.actions.pop()
             else:
+                # Do nothing
                 return Directions.STOP
+        # Applies an action
         else:
             return self.actions.pop()
 
@@ -64,14 +71,18 @@ class MyAgent(Agent):
         leave it blank
         """
 
+        # Indicates if action is made first time
         global start
         start = False
+        # Indicates if pacman targeted all food
         global end
         end = False
 
+        # Represents a list of food that is being targeted
         global target_food
         target_food = []
 
+        # Represents a list of actions that needs to be applied
         self.actions = []
 
 class CoopAgent(Agent):
@@ -179,8 +190,11 @@ class AnyFoodSearchProblem(PositionSearchProblem):
         global end
         global food_count
 
+        # Checks if state is food and it is not being targeted
         if state not in target_food and self.food[x][y]:
+            # Targets the food
             target_food.append(state)
+            # Indicates if pacman targeted all food
             if len(target_food) == food_count:
                 end = True
             return True
